@@ -43,7 +43,7 @@ MTPA/Current Distribution:
 + Torque with MTPA: $T = 1.5\,p\,[\lambda I_q + \Delta L \cdot |I_d| \cdot I_q]$
 + Torque without MTPA: $T = 1.5\,p\,\lambda\,I_s$
 
-You don't need to understand every single equation for this guide to make sense but it helps to understand most of it.
+You don't need to understand every single equation for this guide to make sense (not even all are used) but it helps to understand most of it.
 
 # Motor Detection
 
@@ -54,7 +54,7 @@ We do a detection so we can:
 
 ## Preparation
 
-> Only run the detection cold to ensure correct magnetic flux.
+> Only run the detection cold to ensure correct magnetic flux/resistance.
 
 Before running any Motor Detection be sure to go to *Motor Cfg -> FOC -> Sensorless -> Temp Comp* and set it to on if you have a temperature sensor, this will recalculate for the values gained during the detection and sets *Temp Comp Base Comp* which compensates for increased resistance during riding. (Be sure to select the correct temp sensor)
 
@@ -194,9 +194,9 @@ Real increases on this setup:
 + 1.00: 62.1km/h,
 + 1.15: 67.2km/h,
 
-Not a significant increase since this setup is voltage limited, so it is recommended not to use it on set ups like these if you have temperature issues.
+Not a significant increase since this setup is current limited, so it is recommended not to use it on set ups like these if you have temperature issues.
 
-Going above 1.15 is not recommended, as it will just lead to massive torque ripple, iron loss and copper loss without any more noticeable gain, the first few percent of gains are usually pretty free so stay under 1.15.
+Going above 1.15 is not recommended, as it will just lead to massive torque ripple, iron loss and copper loss without any more noticeable gain, the first few percent of gains are usually pretty free so stay under or at 1.15.
 
 Use:
 - 1.0 if you're current limited rather than voltage limited, reason being unneeded harmonic losses
@@ -218,9 +218,7 @@ Deep overmodulation also means applied voltage is no longer equal commanded volt
 
 Switching frequency pulls the observer two ways at once, which is why this isn't obvious. Dead time error grows with frequency and lands on your BEMF floor, but control rate is your estimator update rate and more is better. Lowering frequency while enabling V0/V7 gives improvements on both.
 
-Before bothering, this is a fine adjustment and not a fix for anything. Below about 10 control updates per electrical cycle is where quality actually falls apart, and a 23 pole pair hub at 166 Hz electrical sits at 102 even on V0 Only.
-
-**If you ever raise switching frequency, disable V0/V7 first,** above ~40 kHz it can hang the CPU and get dangerous, blown mosfets and drivers is a very real possibility.
+**If you ever raise switching frequency, disable V0/V7 first,** above ~40 kHz it can hang the CPU and get dangerous, blown mosfets and drivers is a very real possibility, this has personally happened to me running sensorless openloop and HFI at high frequencies even on V0 only.
 
 # Field Weakening
 
