@@ -8,7 +8,7 @@ title: Vesc Tuning Guide
 
 ## Important!
 
-* Don't change values you are not comfortable using or don't know what they do, you can very well blow up your VESC with badly configured control loops.
++ Don't change values you are not comfortable using or don't know what they do, you can very well blow up your VESC with badly configured control loops.
 
 + You also only get marginal gains from using all of this, don't go into this expecting a torque boost of 10%, 2-3% more performance + a more efficient/smooth observer is realistic.
 
@@ -82,7 +82,7 @@ If that unloaded top speed is nowhere near what the motor should do, then lambda
 
 If everything runs clean without much vibration after setting up your throttle and current limits for your setup you are good to go, however consider using this guide even if you don't have issues with vibrations and cogging.
 
-# Sensorless Interpolation and running Halls only
+# Sensorless Interpolation
 
 > VESC automatically transitions into sensorless operation from sensored at 2k-3k ERPM, optimizing the observer is cruicial for all of this to work.
 
@@ -142,7 +142,7 @@ Now you can set your *Sensored Transition ERPM* to 1145 and your *Sensorless Tra
 
 Just don't use it. This exists so a sensorless motor can make torque at zero speed, you will just get extra noise, new parameters to tune in and more headaches.
 
-Two things worth changing beyond the numbers. The "made for IPM not BLDC" framing isn't the mechanism, since your hub *is* salient at 22.9%. And "leave it disabled" now conflicts with what we found about Lq−Ld feeding the observer when MTPA is off.
+(I have managed to get this working on a outrunner setup and will document it here someday)
 
 # MTPA
 
@@ -171,7 +171,7 @@ Per VESC PR #91, $L_q-L_d$ is separate from MTPA and **only affects the observer
 
 So with MTPA on, $L_q-L_d$ only feeds a path worth half a percent and an inaccurate value changes no observer behavior then, given saliency is current dependent, enabling MTPA sounds like a good idea, although this is extremely setup dependent and you should test if it makes your setup heat up, cog or track worse before considering.
 
-## $I_q$ Target vs $I_q$ Measured
+## Iq Target vs Iq Measured
 
 The only difference is that commanded and actual current disagree:
 - throttle transients -> milliseconds, irrelevant
@@ -235,7 +235,7 @@ That $\omega_e L_q I_q$ term is the one nobody mentions and it's big. On a 2kW h
 
 Work out your $m$ at top speed before bothering. Well under 1 means you're current or drag limited and this setting will do nothing for you.
 
-## How the curve actually works
+## How it actually works
 
 It doesn't work how most people think, it ramps linearly with duty:
 
@@ -255,13 +255,13 @@ It's also self-limiting. Weakening lowers the voltage you need, which lowers dut
 - _FW Ramp Time_: controls how fast it comes on. If engagement feels abrupt, this is the setting, not the current limit.
 - _FW Backoff_: **leave this non-zero.** See below.
 
-## The runaway condition
+## Dangers of Field Weakening
 
 From the firmware comment in `foc_run_fw`: requesting more weakening than the motor can achieve makes the current controller put almost all voltage into $V_d$, and then the $I_q$ controller has no headroom left to overcome the d-axis coupling. $I_q$ falls short, nothing notices, weakening keeps going, $I_q$ falls further.
 
 _FW Backoff_ breaks the loop by feeding $I_q$ error back into the setpoint, scaling the whole ramp down. This is the fix for the runaway complaints you'll find on older firmware.
 
-## Decoupling, and why it matters here
+## Decoupling
 
 The same firmware comment warns that if axis decoupling isn't working properly, oscillation on the modulation can drop estimated duty below the FW threshold long enough to stop modulation, at which point the body diodes see a lot of current and you get unexpected braking. At speed that's not a fault code, it's a surprise.
 
