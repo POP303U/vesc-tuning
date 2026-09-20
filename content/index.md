@@ -14,7 +14,7 @@ title: Advanced VESC Tuning Guide
 
 + Only Change one setting at a time, changing multiple settings at once will leave you wondering what setting fucked up what.
 
-# The Equations
+# Equations
 
 + These are needed for certain settings to see validity/value the effectiveness of them. 
 + $p$ stands for pole pairs, the rest of the values are either measurements from VESC or from your specific wheel setup.
