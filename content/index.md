@@ -106,7 +106,7 @@ Go to *Motor Cfg -> FOC -> Advanced*, and test the different observers during th
 - `FOC_OBSERVER_MXV_LAMBDA_COMP`
 	- This and the \_LIN version of this algo are the best two observers, they use advanced math and algos with separate parameters for gain which makes them amazing for avoiding and fixing motor crunch.
 - `FOC_OBSERVER_MXV_LAMBDA_COMP_LIN`
-	- This Observer uses a low-pass filter to estimate flux much closer, try using it if the normal version doesn't help during heavy saturation.
+	- This Observer uses a low-pass filter to estimate flux much closer, try using it if you run your motor into heavy saturation, else don't.
 
 ## Environment Compensation
 
@@ -191,7 +191,7 @@ Don't use $Iq$ Target use $Iq$ Measured, it can introduce unintended amounts of 
 - 34 kHz V0 Only: 0.24V dead time error, 17 kHz control rate
 - 24 kHz V0 and V7: 0.17V, 24 kHz control rate
 
-Switching frequency pulls the observer two ways at once, which is why this isn't obvious. Dead time error grows with frequency and lands on your BEMF floor, but control rate is your estimator update rate and more is better. Lowering frequency while enabling V0/V7 gives improvements on both.
+Switching frequency pulls the observer two ways at once, which is why this isn't obvious. Dead time error grows with frequency and lands on your BEMF floor, but control rate is your estimator update rate and more is better, in turn lowering frequency while enabling V0/V7 gives improvements on both.
 
 **If you ever raise switching frequency, disable V0/V7 first,** above ~40 kHz it can hang the CPU and get dangerous, blown mosfets and drivers is a very real possibility, this has personally happened to me running sensorless openloop and HFI at high frequencies even on V0 only.
 
@@ -232,7 +232,7 @@ Your voltage ceiling isn't just back-EMF. The inverter has to supply three thing
 
 The $\omega_e L_q I_q$ is the main term, on a 2kW hub at 65 km/h it's 6.9V out of 26.7V total, so 26% of your applied voltage, which will keep growing with speed and current. Field weakening makes it smaller by injecting negative $I_d$, which subtracts from $V_q$ through $\omega_e L_d I_d$.
 
-If your duty cycle never stabilises at 95% or the configured max duty, it means you never reach your true modulation depth and this setting will do nothing for you.
+You don't have to totally understand this, but if your duty cycle never stabilises at 95% or the configured max duty, it means you never reach your true modulation depth and this setting will do nothing for you.
 
 ## How it actually works
 
