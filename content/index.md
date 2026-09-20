@@ -1,5 +1,5 @@
 ---
-title: Vesc Tuning Guide
+title: Advanced VESC Tuning Guide
 ---
 
 # Preface
