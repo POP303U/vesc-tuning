@@ -147,7 +147,7 @@ Just don't use it. This exists so a sensorless motor can make torque at zero spe
 
 # MTPA
 
->  Saliency $= (L_q - L_d) / L$
+> Saliency $= (L_q - L_d) / L$
 > $I_d = [\lambda - \sqrt{\lambda^2 + 8\,\Delta L^2 I_s^2}] / (4\,\Delta L)$
 
 Saliency tells you reluctance torque is possible however it doesn't tell you whether it is big enough to actually use, this ratio shows it better:
