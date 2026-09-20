@@ -27,14 +27,15 @@ title: Vesc Tuning Guide
 
 **Important Constants/Formulas**
 
+Observer Tracking/Losses:
 + Back-EMF: $V_{emf} = 2\pi\,(\mathrm{ERPM}/60)\,\lambda$
 + Copper Loss: $P_{cu} = 1.5\,I^{2}R$
 + Observer Gain: $g_{obs} = 0.001/\lambda^{2}$
-+ Saliency: $s = (L_q\,-\,L_d)/L$
 + Dead Time Error: $\Delta V = V_{dc}\,t_{dead}\,f_{sw}$
 + BEMF Floor: $V_{floor} = \Delta V + I \cdot R_{err}$
 + ERPM from target BEMF: $ERPM = (5 V_{floor}/\lambda) \cdot 60 / (2\pi)$
 
+MTPA/Current Distribution:
 + Saliency: $s = (L_q - L_d)/L$
 + Reluctance to Magnet Ratio: $\xi = \Delta L \cdot I_s / \lambda$
 + Optimal d-axis Current: $I_d = [\lambda - \sqrt{\lambda^{2} + 8\Delta L^{2}I_s^{2}}]/(4\Delta L)$
