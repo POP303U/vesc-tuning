@@ -93,7 +93,7 @@ Set *Hall Sensor Interpolation ERPM* to 250, halve or double your *Observer Gain
 
 Go to *Motor Cfg -> FOC -> Advanced*, and test the different observers during the transition period. Ortega works better for highly salient motors which is almost never the case for outrunners, but mxlemming works much nicer with motors that have rapid saturation and high pole counts, mxv is the better version of mxlemming moreso.
 
-+ `FOC_OBSERVER_ORTEGA_ORIGINAL
++ `FOC_OBSERVER_ORTEGA_ORIGINAL`
 	+ Original VESC Observer, no adjustable gain and shouldn't be used unless you like hand tuning motor parameters.
 - `FOC_OBSERVER_MXLEMMING`
 	- New Observer type made by mxlemming, should be tested first.
