@@ -180,6 +180,21 @@ The only difference is that commanded and actual current disagree:
 
 Don't use $Iq$ Target use $Iq$ Measured, it can introduce unintended amounts of field weakening on a setup where MTPA is already on something that's not meant for it.
 
+# Zero Vector Frequency and Control Sample Mode
+
+> _V0 Only_ runs the controllers and estimators at HALF your switching frequency, _V0 and V7_ runs them at the full frequency and needs phase shunts.
+
+**Run 24 kHz with V0 and V7 if your hardware supports it,** it beats a higher frequency on V0 Only for both of the things that make the observer read signals cleaner.
+
+2kW hub, 58.8V, 0.12µS dead time:
+
+- 34 kHz V0 Only: 0.24V dead time error, 17 kHz control rate
+- 24 kHz V0 and V7: 0.17V, 24 kHz control rate
+
+Switching frequency pulls the observer two ways at once, which is why this isn't obvious. Dead time error grows with frequency and lands on your BEMF floor, but control rate is your estimator update rate and more is better. Lowering frequency while enabling V0/V7 gives improvements on both.
+
+**If you ever raise switching frequency, disable V0/V7 first,** above ~40 kHz it can hang the CPU and get dangerous, blown mosfets and drivers is a very real possibility, this has personally happened to me running sensorless openloop and HFI at high frequencies even on V0 only.
+
 # Overmodulation
 
 > Linear SVM caps phase voltage at $V_{dc}/\sqrt{3}$, six-step at $2V_{dc}/\pi$
@@ -205,24 +220,9 @@ Use:
 
 Deep overmodulation also means applied voltage is no longer equal commanded voltage, which is where issues with the observer can start to arise, this only matters near top speed where back-EMF is large, but if you have tracking issues at top speed and nowhere else, you should check this setting.
 
-# Zero Vector Frequency and Control Sample Mode
-
-> _V0 Only_ runs the controllers and estimators at HALF your switching frequency, _V0 and V7_ runs them at the full frequency and needs phase shunts.
-
-**Run 24 kHz with V0 and V7 if your hardware supports it,** it beats a higher frequency on V0 Only for both of the things that make the observer read signals cleaner.
-
-2kW hub, 58.8V, 0.12µS dead time:
-
-- 34 kHz V0 Only: 0.24V dead time error, 17 kHz control rate
-- 24 kHz V0 and V7: 0.17V, 24 kHz control rate
-
-Switching frequency pulls the observer two ways at once, which is why this isn't obvious. Dead time error grows with frequency and lands on your BEMF floor, but control rate is your estimator update rate and more is better. Lowering frequency while enabling V0/V7 gives improvements on both.
-
-**If you ever raise switching frequency, disable V0/V7 first,** above ~40 kHz it can hang the CPU and get dangerous, blown mosfets and drivers is a very real possibility, this has personally happened to me running sensorless openloop and HFI at high frequencies even on V0 only.
-
 # Field Weakening
 
-> Only does something when you're against the voltage limit. Below that it costs you $I_q$ and gives you nothing.
+> Only does something when you're against the voltage limit, below that it costs you $I_q$/torque and does nothing.
 
 Your voltage ceiling isn't just back-EMF. The inverter has to supply three things:
 
@@ -230,9 +230,9 @@ Your voltage ceiling isn't just back-EMF. The inverter has to supply three thing
 - $V_d = -\omega_e L_q I_q$
 - Modulation depth: $m = \sqrt{V_d^2 + V_q^2} / (V_{dc}/\sqrt{3})$
 
-That $\omega_e L_q I_q$ term is the one nobody mentions and it's big. On a 2kW hub at 65 km/h it's 6.9V out of 26.7V total, so 26% of your applied voltage, and it grows with both speed and current. Field weakening attacks it by injecting negative $I_d$, which subtracts from $V_q$ through $\omega_e L_d I_d$.
+The $\omega_e L_q I_q$ is the main term, on a 2kW hub at 65 km/h it's 6.9V out of 26.7V total, so 26% of your applied voltage, which will keep growing with speed and current. Field weakening makes it smaller by injecting negative $I_d$, which subtracts from $V_q$ through $\omega_e L_d I_d$.
 
-Work out your $m$ at top speed before bothering. Well under 1 means you're current or drag limited and this setting will do nothing for you.
+If your duty cycle never stabilises at 95% or the configured max duty, it means you never reach your true modulation depth and this setting will do nothing for you.
 
 ## How it actually works
 
@@ -241,18 +241,16 @@ It doesn't work how most people think, it ramps linearly with duty:
 - Threshold: _FW Duty Start_ $\times$ _Max Duty_
 - Injected current: maps linearly from 0 at the threshold to _FW Current Max_ at _Max Duty_
 
-So _FW Duty Start_ is a fraction of max duty, not an absolute duty. At 0.80 with max duty 0.95 the threshold is 0.76, and at 83% duty you're only 37% of the way up the ramp, so a configured 50A gives you 18A.
+So _FW Duty Start_ is a fraction of max duty, not an absolute duty. At 0.80 with max duty 0.95 the threshold is 0.76, and at 83% duty you're only 37% of the way up the ramp, so a configured 50A gives you 18A at that amount of duty.
 
-This catches people two ways. Configuring a big _FW Current Max_ does nothing if your threshold is above where you operate, and the injection is always less than configured unless you're at max duty.
-
-It's also self-limiting. Weakening lowers the voltage you need, which lowers duty, which pulls the injection back down. It settles at roughly what's needed rather than running to the configured maximum.
+It's also self-limiting, weakening lowers the voltage you need, which lowers duty, which pulls the injection back down. It settles at roughly what's needed rather than running to the configured maximum (**This does not mean to pull the amps up to 100A and pray it regulates itself**).
 
 ## Tuning it
 
-- _FW Duty Start_: the real lever. Set it so the threshold lands just below where you start running out of voltage. Below that point you keep full $I_q$, above it you convert surplus current into headroom.
-- _FW Current Max_: the top of the ramp, not what gets applied. Raising it does nothing if you never get far up the ramp.
-- _FW Ramp Time_: controls how fast it comes on. If engagement feels abrupt, this is the setting, not the current limit.
-- _FW Backoff_: **leave this non-zero.** See below.
+- _FW Duty Start_: Set it so the threshold lands just below where you start running out of voltage and hit the Back-EMF Wall.
+- _FW Current Max_: the top of the ramp, not what gets applied immediately.
+- _FW Ramp Time_: controls how fast it comes on, 150-500ms are sensible depending on how fast u need it to engage.
+- _FW Backoff_: **leave this non-zero/stock.** See section below.
 
 ## Dangers of Field Weakening
 
@@ -260,23 +258,14 @@ From the firmware comment in `foc_run_fw`: requesting more weakening than the mo
 
 _FW Backoff_ breaks the loop by feeding $I_q$ error back into the setpoint, scaling the whole ramp down. This is the fix for the runaway complaints you'll find on older firmware.
 
-## Decoupling
-
-The same firmware comment warns that if axis decoupling isn't working properly, oscillation on the modulation can drop estimated duty below the FW threshold long enough to stop modulation, at which point the body diodes see a lot of current and you get unexpected braking. At speed that's not a fault code, it's a surprise.
-
-Decoupling feedforwards the $\omega_e L I$ coupling terms so the PI controllers don't have to fight them. Two catches worth knowing:
-
-- It's feedforward with no error correction, so a wrong $L$ means a confidently wrong voltage. $L$ is the parameter that varies most with current.
-- It needs voltage headroom to apply the correction. At 97% duty there is none, so it gets clipped and you cancel part of the term instead of all of it, which can be worse than not doing it.
-
-So decoupling is least reliable exactly where field weakening operates. Test it the same way as everything else: same stretch, same speed, motor current logged with it on and off.
+Nowadays this is not an issue anymore on newer vesc firmware versions like 7.0, as they have the $Iq$ buffer set to 2-5% which fixes all this.
 
 ## Cost
 
-Current magnitude is what your limit and your copper loss care about, so every amp of $I_d$ is an amp not making torque:
+Field Weakening doesn't directly cause heat, instead the reallocation of $Iq$ into $Id$ causes the motor to need more q-axis current to overcome drag, which in turn demands more $Iq$ aka heat.
 
 - $I_s^2 = I_d^2 + I_q^2$
 
-At 80A total with 40A of weakening, $I_q$ is 69A, so you've given up 14% of your torque current. That's fine near the voltage ceiling where $I_q$ was voltage-limited anyway, and pure loss below it.
+At 80A total with 40A of weakening, $I_q$ is 69A, which is 14% of your torque current lost, that is alright near the voltage ceiling where speed was voltage-limited anyway.
 
-Unlike overmodulation, field weakening adds no harmonics. $I_d$ is a clean DC quantity in the rotating frame. The two only appear together because both act near the voltage ceiling.
+Unlike overmodulation, field weakening adds no harmonics. $I_d$ is a clean DC quantity in the rotating frame, no need to distort the voltage waveform.
