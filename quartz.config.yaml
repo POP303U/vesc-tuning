@@ -7,7 +7,7 @@ configuration:
   analytics:
     provider: plausible
   locale: en-US
-  baseUrl: pop303u.github.io/vesc
+  baseUrl: pop303u.github.io
   ignorePatterns:
     - private
     - templates
