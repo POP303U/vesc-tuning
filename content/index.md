@@ -24,7 +24,7 @@ Observer tuning, saturation compensation, sampling modes, sensorless transition 
 
 ### [[Custom VESC QML Dashboard]]
 
-Custom VESC Tool QML dashboard with configurable gauges including values for $I_d$, $I_q$, $V_d$, $V_q$, phase current, line current, weakening current, voltage and modulation/$V_dq$. Also has a custom battery gauge much better compared to the stock one.
+Custom VESC Tool QML dashboard with configurable gauges including values for $I_d$, $I_q$, $V_d$, $V_q$, phase current, line current, weakening current, voltage and modulation/$V_{dq}$. Also has a custom battery gauge much better compared to the stock one.
 
 ## Safety
 
