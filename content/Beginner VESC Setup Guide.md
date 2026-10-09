@@ -1,239 +1,176 @@
 ---
 title: Beginner VESC Setup Guide
 date: 2026-10-08
-description: A conservative VESC setup workflow for getting a motor running safely and smoothly before touching advanced FOC tuning.
+description: Simple first setup for a VESC. Detection, limits, wheel/motor info, sensors, throttle and a first test, with a common problems table for when something is off.
 tags:
   - vesc
   - beginner
   - setup
 ---
 
-# Beginner VESC Setup Guide
+# Beginner VESC setup guide
 
-> This guide is for getting a normal VESC setup running safely and smoothly. It deliberately avoids most advanced FOC tuning.
+> "If it works, don't fix it"
 
-If your motor detects correctly, runs smoothly, transitions cleanly from sensors to sensorless operation, stays inside temperature/current limits and reaches the expected speed, **leave the advanced settings alone**.
+If your motor detects correctly, runs smoothly, doesn't cog, switches from halls to sensorless smoothly, stays inside temperature and current limits and reaches the speed you need, leave the advanced settings alone. The [[Advanced VESC Tuning Guide]] is only needed when you got a specific problem or want to push the absolute limits of your setup.
 
-For observer tuning, saturation compensation, MTPA, switching/sample mode, overmodulation and field weakening, see [[Advanced VESC Tuning Guide]].
+## Rules for the whole guide
+
+- Wheels off the ground for the first setup and the first test.
+- Change one setting at a time and test after each change.
+- Never raise several limits at once.
+- Know your controller's safe motor current, battery current and voltage limits before you start.
+
+A VESC can damage the controller, motor or battery very quickly when current, voltage or control loop settings are wrong.
 
 ## Before you start
 
-- Put the driven wheel(s) safely off the ground for initial setup.
-- Make sure the battery voltage, cell count and controller voltage rating are correct.
-- Make sure motor and controller temperature sensors are configured correctly if present.
-- Know the controller's safe motor-current, battery-current and voltage limits.
-- Do not raise several limits at once.
-- Change one setting at a time and test after each change.
+Check these first:
 
-A VESC can damage the controller, motor or battery very quickly when current, voltage or control-loop settings are wrong.
+- Battery voltage, cell count and the controller's voltage rating all match.
+- Motor and controller temperature sensors are configured, if you have them.
+- Wheel(s) are safely off the ground.
 
-# 1. Run Motor Detection
+## Something is wrong, where do I look?
 
-Start with a cold motor.
+| Symptom | Check first | Section |
+|---|---|---|
+| Motor vibrates, crunches or loses sync after detection | Detection result, wiring, motor direction | [Step 1](#step-1-run-motor-detection) |
+| Detection values change between runs | Motor temperature, connectors, wiring | [Step 1](#step-1-run-motor-detection) |
+| Speed reading doesn't match real speed | Pole pairs, wheel diameter, gearing | [Step 3](#step-3-set-wheel-and-motor-info) |
+| Motor cogs when switching from halls to sensorless | Hall table, motor parameters, temp comp | [Step 4](#step-4-set-up-sensors) |
+| Throttle or brake behaves wrong | Neutral, direction, overlap | [Step 5](#step-5-set-up-throttle-and-brakes) |
+| Faults or hot parts on first test | Current limits, cooling, load | [Step 6](#step-6-first-test) |
+| Rough only at very high speed | Voltage limit or observer | [Advanced guide](#when-to-use-the-advanced-guide) |
+| Want more top speed | What actually limits you | [Step 7](#step-7-before-chasing-top-speed) |
 
-Use the normal VESC Tool motor setup/detection flow and select the correct motor type. If you do not already understand what **Max Power Loss** changes, leave the advanced override alone.
+# Step 1: run motor detection
 
-The detection should produce the motor parameters used by FOC, including:
+Start with a cold motor. Use the normal VESC Tool motor setup flow and select the correct motor type. Leave the advanced *Max Power Loss* override alone unless you already know what it changes.
+
+Detection gives you the motor parameters FOC uses:
 
 - motor resistance
 - motor inductance
 - flux linkage
-- Hall sensor table if halls are used
+- Hall sensor table, if you use halls
 
-## Sanity-check the result
-
-After detection:
+## Check the result
 
 1. Spin the motor gently.
-2. Make sure direction is correct.
+2. Make sure the direction is correct.
 3. Listen for strong vibration, crunching or repeated loss of sync.
-4. Check that the detected motor parameters are plausible for the motor.
-5. Re-run detection under the same cold conditions if the result looks suspicious.
+4. Check that the detected values are plausible for the motor.
+5. If anything looks off, rerun detection cold.
 
-Detection values should be reasonably repeatable when current, motor temperature and test conditions are kept the same. Large changes are a reason to investigate the test conditions, wiring/connectors or the motor itself.
+Values should repeat reasonably well when current, motor temperature and test conditions stay the same. Large changes mean something is wrong with the test conditions, the wiring or connectors, or the motor.
 
-# 2. Set hardware limits before performance limits
+# Step 2: set hardware limits first
 
-Do this before trying to make the vehicle faster.
+Set limits before you try to make anything faster.
 
 ## Motor current
 
-Motor current is phase current. It determines low-speed torque and is normally much higher than battery current.
-
-Set this to a value your:
-
-- motor
-- controller
-- connectors
-- phase wiring
-
-can tolerate.
+This is phase current. It sets low-speed torque and is normally much higher than battery current. Set it to what your motor, controller, connectors and phase wiring can all tolerate.
 
 ## Battery current
 
-Battery current is the DC current drawn from the pack.
+This is the DC current drawn from the pack. Keep it inside the safe limits of the cells, BMS, battery wiring and connectors.
 
-Keep this inside the safe limits of the:
+Motor current and battery current are not the same value.
 
-- cells
-- BMS
-- battery wiring
-- connectors
+## Regen
 
-Motor current and battery current are **not the same value**.
-
-## Regeneration
-
-Set battery regen current to a value the pack and BMS can safely accept.
-
-Do not assume the pack can accept the same charge current that it can discharge.
+Set battery regen current to what the pack and BMS can safely accept. Don't assume the pack takes the same charge current it can discharge.
 
 ## Temperature limits
 
-Use controller and motor temperature protection when sensors are available.
+Turn on controller and motor temperature protection when you have sensors. Limiting on temperature is better than finding the thermal limit by damaging hardware.
 
-Temperature limiting is preferable to discovering the thermal limit by damaging hardware.
-
-# 3. Configure wheel and motor information
+# Step 3: set wheel and motor info
 
 Set:
 
 - battery series cell count
 - wheel diameter
 - motor pole pairs
-- gearing, if applicable
+- gearing, if you have any
 
-Then verify that VESC Tool's speed reading is close to the real vehicle speed.
+Then check that VESC Tool's speed reading is close to real vehicle speed. A badly wrong reading almost always means one of pole pairs, wheel diameter or gearing is wrong.
 
-A badly wrong speed reading usually means one of those values is wrong.
+# Step 4: set up sensors
 
-# 4. Configure sensors
+If the motor has working Hall sensors, use them. A normal Hall setup should start smoothly from standstill, accelerate cleanly at low speed, and move into sensorless operation without a kick or crunch.
 
-If the motor has working Hall sensors, use them.
+Don't lower the Hall to sensorless transition just because a lower number looks nicer. The observer needs enough back-EMF to track the rotor angle.
 
-A normal Hall setup should:
+If the detected setup transitions cleanly, there's no reason to optimise it further.
 
-- start smoothly from standstill
-- accelerate cleanly at low speed
-- transition into sensorless operation without a large kick or crunch
+## If it cogs in the transition
 
-Do not lower the Hall/sensorless transition just because a lower number looks better. The observer needs enough back-EMF to track rotor angle reliably.
+Check these in order:
 
-If the normal detected setup transitions cleanly, there is no reason to aggressively optimize it.
+1. Hall detection and table
+2. Motor parameters (rerun detection cold if unsure)
+3. Motor temperature compensation
+4. Transition ERPM range
 
-# 5. Configure throttle and brakes
+Only go to observer tuning if it's still rough after that.
 
-Set up the input method you actually use:
+# Step 5: set up throttle and brakes
 
-- ADC throttle
-- UART
-- CAN
-- PPM
-- other app/package input
+Set up the input method you actually use: ADC throttle, UART, CAN, PPM or another app/package input.
 
-Verify:
+Check:
 
 - neutral is stable
 - full throttle reaches the expected command
 - brake direction is correct
-- throttle and brake do not overlap unexpectedly
-- loss-of-signal behavior is safe
+- throttle and brake don't overlap unexpectedly
+- behaviour on loss of signal is safe
 
-Do this at conservative current first.
+Do all of this at conservative current first.
 
-# 6. First test
+# Step 6: first test
 
-Start with a low-power test.
-
-Check:
+Start with a low-power test and check:
 
 - smooth startup
 - smooth Hall operation
 - clean sensorless transition
 - no unexpected faults
-- sensible motor current
-- sensible battery current
-- sensible motor/controller temperatures
+- sensible motor current and battery current
+- sensible motor and controller temperatures
 
-Then raise load gradually.
+Then raise load gradually. Don't jump from an unloaded test straight to maximum phase current.
 
-Do not jump directly from an unloaded setup test to maximum phase current.
+## If the motor runs hot
 
-# 7. Before increasing top speed
+Check phase current, how long the current is held, motor resistance, cooling and mechanical load. If you already enabled field weakening or overmodulation, check those too.
 
-First work out what is actually limiting the setup.
+Don't use a higher switching frequency or observer changes as a substitute for correct thermal limits.
 
-## Current limited
+# Step 7: before chasing top speed
 
-If duty/modulation still has headroom but the motor cannot accelerate harder, adding more voltage tricks will not create extra low-speed torque.
+Work out what is actually limiting the setup first.
 
-Find the actual current/power limit first.
-
-## Voltage limited
-
-If the controller reaches the available motor-voltage ceiling at high speed, then advanced options such as overmodulation or field weakening can increase speed.
-
-## Observer limited
-
-If the motor becomes rough, crunches or loses tracking while electrical headroom remains, fix position estimation/model accuracy before adding more speed.
-
-## Thermal limited
-
-If temperature limiting is reducing current, adding more aggressive FOC settings is not the solution.
-
-# Common problems
-
-## Motor cogs during Hall-to-sensorless transition
-
-First verify:
-
-- Hall detection/table
-- motor parameters
-- motor temperature compensation
-- transition ERPM range
-
-Only move into observer tuning if the normal setup is still rough.
-
-## Motor gets rough only at very high speed
-
-This can be a voltage-limit, observer or overmodulation problem.
-
-See [[Advanced VESC Tuning Guide]].
-
-## Motor runs hot
-
-Check:
-
-- phase current
-- current duration
-- motor resistance
-- cooling
-- field weakening
-- overmodulation
-- mechanical load
-
-Do not treat higher switching frequency or observer changes as a substitute for correct thermal limits.
-
-## Speed reading is wrong
-
-Check:
-
-- pole pairs
-- wheel diameter
-- gearing
+- Current limited: duty still has headroom but the motor can't accelerate harder. Voltage tricks won't add low-speed torque. Find the real current or power limit.
+- Voltage limited: the controller reaches the motor voltage ceiling at high speed. Only here can overmodulation or field weakening help.
+- Observer limited: the motor is rough or loses tracking while electrical headroom remains. Fix position estimation before adding speed.
+- Thermal limited: temperature limiting is already cutting current. More aggressive FOC settings won't fix it.
 
 # When to use the advanced guide
 
-Move on to [[Advanced VESC Tuning Guide]] when you specifically need to work on:
+Move on to the [[Advanced VESC Tuning Guide]] when you specifically need:
 
 - observer selection and tracking
 - saturation compensation
-- Hall-to-sensorless transition optimization
+- hall to sensorless transition optimisation
 - V0/V7 sampling and switching frequency
 - HFI
 - MTPA
 - overmodulation
 - field weakening
-- high-current/high-speed diagnostic work
+- high-current or high-speed diagnostic work
 
-If the setup already works correctly, there is no requirement to use those features.
+If the setup already works correctly, you don't need any of those.
