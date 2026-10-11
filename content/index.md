@@ -1,18 +1,13 @@
 ---
 title: VESC Tuning & Tools
 date: 2026-10-08
-description: VESC setup, advanced FOC tuning and custom diagnostic tools.
 ---
 
 # VESC Tuning and Tools
 
 Personal set of notes and tools for my VESC based e-bike or other scooter/VESC builds.
 
-## Guides
-
-### [[Beginner VESC Setup Guide]]
-
-Easy to follow guide explaining how to get a motor detected, setting safe limits, configuring sensors and getting a normal setup without touching advanced FOC controls.
+## Pages
 
 ### [[Advanced VESC Tuning Guide]]
 

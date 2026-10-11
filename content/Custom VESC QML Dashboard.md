@@ -1,12 +1,11 @@
 ---
 title: Custom VESC QML Dashboard
 date: 2026-10-08
-description: Custom VESC Tool QML dashboard with configurable gauges, presets and an FOC diagnostic view.
+description: Custom VESC dashboard with configurable gauges, presets and an FOC diagnostic view.
 tags:
   - vesc
   - qml
   - dashboard
-  - diagnostics
 ---
 
 # Custom VESC QML Dashboard

@@ -1,7 +1,7 @@
 ---
 title: Advanced VESC Tuning Guide
 date: 2026-10-08
-description: Advanced VESC FOC tuning, observer diagnostics, saturation compensation, sampling, MTPA, overmodulation and field weakening.
+description: Advanced FOC tuning, observer diagnostics, saturation compensation, sampling, MTPA, overmodulation and field weakening.
 tags:
   - vesc
   - foc
@@ -338,3 +338,9 @@ Unlike overmodulation, field weakening adds no harmonics. $I_d$ is a clean DC qu
 If your bike cogs when it hits a profile speed limit but is fine unlimited, look here. At the limit a speed loop takes over, and if *Speed Tracker Position Source* is on *Observer* and you lowered your observer gain, it reads a laggy speed and starts hunting.
 
 Im still not sure why anything here introduces issues with speed limiting but I'll find the issue soon.
+
+# Sources:
+
++ [VESC Firmware and its behaviour in foc_math.c](https://github.com/vedderb/bldc/blob/master/motor/foc_math.c)
++ [Research on MTPA and Field Weakening for PMSM motors](https://www.researchgate.net/publication/390991756_Optimizing_Permanent_Magnet_Synchronous_Motor_Performance_Considering_Both_Maximum_Torque_Per_Ampere_and_Field_Weakening)
++ [Review of Overmodulation in SVPWM systems](https://www.researchgate.net/publication/328394512_Over_Modulation_Strategy_of_Power_Converters_A_Review)
