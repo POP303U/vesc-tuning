@@ -21,24 +21,6 @@ tags:
 
 + Only Change one setting at a time, changing multiple settings at once will leave you wondering what setting fucked up what.
 
-## Before tuning, check what's limiting you
-
-Current (A) limited:
-+ Duty/modulation still has headroom at maximum load
-	+  More voltage won't help torque, nothing helps other than a new battery.
-
-Voltage (V) limited:
-* Duty/modulation reaches its ceiling
-	+ Overmodulation/Field Weakening can increase speed.
-
-Observer limited:
-+ Motor becomes rough despite electrical headroom
-	+ Fix tracking/observer model first.
-
-Thermal limited:
-+ Current is being reduced by temperature limits
-	+ More FOC tuning won't fix it/will make it slightly better.
-
 # Equations
 
 + These are needed for certain settings to see validity/value the effectiveness of them. 
@@ -94,11 +76,11 @@ Do this if u feel confident, i wouldn't mess with it if you don't have the exper
 
 * Set the *Max Power Loss* to the max acceptable peak loss during acceleration, tweak this value based on your setup, lower might be better on motors with less mass while selecting your motor type by clicking on *Override (Advanced)* and then do that.
 
-VESC sets the detection current based on: $I = \sqrt{P/(1.5R)}$, so 800 W on 50.3 mΩ gives 103 A, if you use values like 800W on 2kW motors your motor will saturate and you get high-current values instead of normal ones, which is desired on setups that run into a lot.
+VESC sets the detection current based on: $I = \sqrt{P/(1.5R)}$, so 800 W on 50.3 mΩ gives 103 A, if you use values like 800W on 2kW motors your motor will saturate and you get high-current values instead of normal ones, which can be desired on setups that run into saturation a lot.
 
 ## Running it
 
-+ Always run the detection at the same current and in the same conditions, then if R, L and lambda don't repeat within ~2% your wiring, the connectors are bad/you performed the detection with the wheel on the ground or heated it up. 
++ Always run the detection at the same current and in the same conditions, then if R, L and lambda don't repeat within >~2% your wiring, its reason to believe that connections are bad/you performed the detection with the wheel on the ground or heated it up. 
 
 + Running this test every few weeks and comparing cold values helps you diagnose motor/config issues early and helps prevent damage so don't ignore your motor.
 
@@ -109,7 +91,7 @@ Here is an example of correctly read parameters on a 52V 4T 2kW e-bike hub motor
 + kV: $60 / (\sqrt{3} \cdot 2\pi \cdot 0.020439Wb \cdot 23p)$ = **11.7 rpm/V**
 + Unloaded Speed: $0.1885 \cdot 11.7 \cdot 58.8V \cdot 0.7366m$ = **95.52km/h**
 
-If that unloaded top speed is nowhere near what the motor should do, then lambda, pole pairs or wheel size is wrong, slight deviation is ok from unloaded top speed if it lines up with GPS speed due to multiple motor driving factors. (overmodulation, MTPA set to $Iq$ target or field weakening change unloaded top speed so beware)
+If that unloaded top speed is nowhere near what the motor should do, then lambda, pole pairs or wheel size is wrong, slight deviation is ok from unloaded top speed if it lines up with GPS speed due to multiple motor driving factors. (overmodulation, MTPA set to $Iq$ target or field weakening change unloaded top speed)
 
 ## Testing
 
@@ -119,11 +101,11 @@ If everything runs clean without much vibration after setting up your throttle a
 
 > VESC typically blends into sensorless operation from sensored at 2k-3k ERPM, optimizing the observer is crucial for all of this to work.
 
-Set *Hall Sensor Interpolation ERPM* to 250 from 500 (setting it too low can cause issues with negative speeds), halve your *Observer Gain* (lower is better at low speed, higher tracks faster) and set *Max ERPM* higher than the default, the tracking should already be much better, if that doesn't fix it, continue on and tune the observer.
+Set *Hall Sensor Interpolation ERPM* to 250 from 500 (setting it too low can cause issues with negative speeds), *Hall Sensor Extra Samples* to 5 and set *Max ERPM* higher than the default, the tracking should already be much better, if that doesn't fix it, continue on and tune the observer.
 
 ## Observer Types
 
-Go to *Motor Cfg -> FOC -> Advanced*, and test the different observers during the transition period. Mxlemming works much nicer with motors that have rapid saturation and high pole counts, mxv is the better version of mxlemming (due to better processing of flux).
+Go to *Motor Cfg -> FOC -> Advanced*, and test the different observers during the transition period. Mxlemming works much nicer with motors that have rapid saturation and high pole counts, mxv is the heavier version of mxlemming (due to more advanced processing of flu).
 
 + `FOC_OBSERVER_ORTEGA_ORIGINAL`
 	+ Original VESC Observer, uses the observer gain and relies heavily on your motor parameters being right, shouldn't be used unless you like hand tuning motor parameters.
@@ -134,7 +116,7 @@ Go to *Motor Cfg -> FOC -> Advanced*, and test the different observers during th
 - `FOC_OBSERVER_MXLEMMING_LAMBDA_COMP`
 	- This Observer works quite well for a lot of setups and should be taken into consideration, however use MXV for setups that are pushed into magnetic saturation. (aka pushing more amps than intended for the motor type)
 - `FOC_OBSERVER_MXV`
-	- Same as mxlemming but with the proper circle clamp, no flux linkage compensation though, it assumes your lambda is right and doesn't use observer gain.
+	- MXV is related to MXLEMMING but handles the flux-state construction/clamping differently, no flux linkage compensation though, it assumes your lambda is right and doesn't use observer gain.
 - `FOC_OBSERVER_MXV_LAMBDA_COMP`
 	- This and the \_LIN version of this algo work the best with my setup, circle clamp plus it estimates your flux linkage live instead of trusting the config, which makes them amazing for avoiding and fixing motor crunch.
 - `FOC_OBSERVER_MXV_LAMBDA_COMP_LIN`
@@ -142,7 +124,7 @@ Go to *Motor Cfg -> FOC -> Advanced*, and test the different observers during th
 
 ## Environment Compensation
 
-All of these changes should've already removed cogging on 95% of setups, if you still experience issues with cogging you might want to check compensation first.
+All of these changes should've already removed cogging on most setups, if you still experience issues with cogging you might want to check compensation first.
 
 Go to *Motor Cfg -> FOC -> Sensorless* and set *Saturation Compensation Factor* to 0-5% using *Factor* first.
 
@@ -155,17 +137,19 @@ This doesn't add heat by itself, it only changes what the observer thinks, but a
 > _V0 Only:_ runs the controllers and estimators at HALF your switching frequency _V0 and V7: runs them at the full frequency and needs phase shunts.
 > V0 and V7: Interpolated uses transforms to estimate vectors, rarely needed
 
-**You should run 24kHz/30kHz with V0 and V7 if your hardware supports it,** it beats a higher frequency on V0 Only for two observer factors.
+**You should start with 24kHz/30kHz on V0 and V7 if your hardware supports it,** it beats a higher frequency on V0 Only for two observer factors.
 
 2kW hub, 58.8V, 0.16µS dead time (100100 default):
 
 - 34 kHz V0 Only: 0.32V dead time error, 17 kHz control rate
 - 24 kHz V0 and V7: 0.23V dead time error, 24 kHz control rate
 
+The 100100 of course doesn't have high side shunts so this example doesn't make sense, it's just theoretical.
+
 Switching frequency changes the observer two ways at once, dead time error grows with frequency and lands on your BEMF floor, but control rate is your estimator update rate and more is better, however lowering frequency while enabling V0/V7 gives improvements on both.
 
-**If you ever raise switching frequency, disable V0/V7 first,** above ~40 kHz it can hang the CPU and blown fets is a very real possibility, which you don't need to risk since sampling that high isn't that beneficial anymore.
-
+**If you ever raise switching frequency, disable V0/V7 first,** above ~40-50kHz it can hang the CPU and cause undesirable behavior depending on hardware, you don't need to risk that since sampling that high isn't that beneficial anymore.
+ 
 # Optimizing the Sensorless Transition Window
 
 > If your motor is still cogging or vibrating during transition periods, you might consider switching to halls only or setting the transition window high, instead of following this section, normal setups should still follow through.
@@ -203,9 +187,7 @@ If you have working halls, don't use it. This is for hall-less motors or ones wh
 
 + *45 Deg V0V7 HFI (Silent)* isn't silent without high side phase shunts, most cheap hardware doesn't have it so you can forget it on those. Else enable *V0 and V7* in *Control Sample Mode*
 + A good L and some $L_q-L_d$. The tooltip says the mode relies on a good inductance measurement on top of some difference between Lq and Ld.
-+ *Zero Vector Frequency* at 32 kHz or lower more doesn't run better sometimes worse, the tooltip gives that as the max for completely silent operation.
-
-If it doesn't track well, the tooltip's own advice is to move your L up and down by 1-5%.
++ *Zero Vector Frequency* at 32 kHz or lower, more doesn't run better sometimes worse, the tooltip gives that as the max for completely silent operation.
 
 ## Getting it running
 
@@ -218,14 +200,18 @@ Use *45 Deg V0V7 HFI (Silent)* in *Motor Cfg -> FOC -> General -> Sensor Mode*. 
 3. Set *HFI Ambiguity Resolve Mode* to *Id Double Pulse*.
 4. Leave the rest alone unless something specific is wrong.
 
+If it doesn't track well, the tooltip's own advice is to move your L up and down by 1-5%.
+
 My other values for reference, mostly untouched:
 
 - *Sensorless ERPM HFI*: 1100
 - *HFI Reset ERPM*: 500
 - *HFI Samples*: 32
-- *HFI Gain*: 0.120
-- *HFI Ambiguity Resolve Current*: 10A, *Threshold*: 0%
-- *HFI Current Hysteresis*: 5A
+- *HFI Gain*: 0.140
+- *HFI Max Error*: 0.180
+- *HFI Start Samples*: 5
+- *HFI Ambiguity Resolve Current*: 5A, *Threshold*: 0%
+- *HFI Current Hysteresis*: 0A
 
 *Sensorless ERPM HFI* is where HFI hands over to the observer, so the BEMF floor calculation from the transition section applies to it the same way.
 
@@ -254,7 +240,7 @@ Use the $L_q-L_d$ from a detection near the current you're evaluating at, salien
 
 The observer always uses $L_q-L_d$ to blend between $L_d$ and $L_q$ depending on your current, no matter if MTPA is on or off (you can see this in `foc_observer_update`). So a wrong $L_q-L_d$ hurts your tracking either way, and turning MTPA off doesn't protect you from it.
 
-MTPA itself is basically free, with $I_q$ Measured it can't hurt, so leaving it on is fine, just don't expect any torque from it on a motor like this.
+MTPA itself is basically free, with $I_q$ Measured it can't hurt unless your detection is wrong which it shouldn't be by this point, so leaving it on is fine, just don't expect any torque from it on a motor like this.
 
 ## Iq Target vs Iq Measured
 
@@ -274,7 +260,7 @@ That gap is only 10.3%, so that's all you can ever get out of it, and only if yo
 
 Different levels of unloaded overmodulation 29" hub 11.7 rpm/V on 14S: 
 + 1.00: 95.5 km/h
-+ 1.15: 105.3km/h
++ 1.15: 105.7km/h
 
 Real increases on this setup:
 + 1.00: 62.1km/h
@@ -288,7 +274,8 @@ Use:
 - 1.0 if you're current limited rather than voltage limited (duty never gets near max), you'd pay harmonic losses for nothing.
 - 1.10 for good gains without distorting too much, good middle ground.
 - 1.15 if you hit the voltage wall, most of the speed for a fraction of the distortion.
-- Anything above 1.15 does nothing, six-step is the physical limit.
+
+Anything above 1.15 does very little, you would pay too much distortion for any noticeable gain.
 
 Deep overmodulation also means applied voltage is no longer equal commanded voltage, which is where issues with the observer can start to arise, this only matters near top speed where back-EMF is large, but if you have tracking issues at top speed and nowhere else, you should check this setting.
 
@@ -330,7 +317,7 @@ To find your _FW Current Max_, raise it 10A at a time and do a top speed run eac
 
 From the firmware comment in `foc_run_fw`: requesting more weakening than the motor can achieve makes the current controller put almost all voltage into $V_d$, and then the $I_q$ controller has no headroom left to overcome the d-axis coupling. $I_q$ falls short, nothing notices, weakening keeps going, $I_q$ falls further.
 
-_FW Backoff_ is supposed to break the loop by feeding $I_q$ error back into the setpoint. Don't rely on it alone though, the way it's written it reacts when $I_q$ is above its target, while the runaway happens when $I_q$ falls short, so im not sure what what happens there.
+_FW Backoff_ is supposed to break the loop by feeding $I_q$ error back into the setpoint. Don't rely on it alone though, the way it's written it reacts when $I_q$ is above its target, while the runaway happens when $I_q$ falls short, so im not sure what happens there.
 
 Also remember $I_d$ is real phase current on top of your torque current, 110A of field weakening plus 100A of torque is 149A through your FETs.
 
