@@ -19,15 +19,15 @@ I made this because i felt like the default VESC RT-Data tab was pretty much use
 
 Layout **Default** (loaded by default):
 
-...
+![default](image-3.png)
 
 Layout **FOC** (advanced parameters):
 
-...
+![FOC](image-2.png)
 
 Landscape Preview (**Voltage**):
 
-...
+![voltage](image-1.png)
 
 # Telemetry limitation
 
