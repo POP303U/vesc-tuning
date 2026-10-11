@@ -8,8 +8,6 @@ tags:
   - dashboard
 ---
 
-# Custom VESC QML Dashboard
-
 Repository: [vesc-dashboard](https://github.com/POP303U/vesc-dashboard)\
 Inspired by: https://vesc-project.com/node/3641
 

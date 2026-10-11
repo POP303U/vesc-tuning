@@ -339,7 +339,7 @@ If your bike cogs when it hits a profile speed limit but is fine unlimited, look
 
 Im still not sure why anything here introduces issues with speed limiting but I'll find the issue soon.
 
-# Sources:
+# Sources
 
 + [VESC Firmware and its behaviour in foc_math.c](https://github.com/vedderb/bldc/blob/master/motor/foc_math.c)
 + [Research on MTPA and Field Weakening for PMSM motors](https://www.researchgate.net/publication/390991756_Optimizing_Permanent_Magnet_Synchronous_Motor_Performance_Considering_Both_Maximum_Torque_Per_Ampere_and_Field_Weakening)
