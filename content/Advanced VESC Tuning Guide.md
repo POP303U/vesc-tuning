@@ -107,8 +107,8 @@ Set *Hall Sensor Interpolation ERPM* to 250 from 500 (setting it too low can cau
 
 Go to *Motor Cfg -> FOC -> Advanced*, and test the different observers during the transition period. Mxlemming works much nicer with motors that have rapid saturation and high pole counts, mxv is the heavier version of mxlemming (due to more advanced processing of flux).
 
-+ `FOC_OBSERVER_ORTEGA_ORIGINAL`
-	+ Original VESC Observer, uses the observer gain and relies heavily on your motor parameters being right, shouldn't be used unless you like hand tuning motor parameters.
+- `FOC_OBSERVER_ORTEGA_ORIGINAL`
+	- Original VESC Observer, uses the observer gain and relies heavily on your motor parameters being right, shouldn't be used unless you like hand tuning motor parameters.
 - `FOC_OBSERVER_MXLEMMING`
 	- New Observer type made by mxlemming, doesn't use observer gain at all.
 - `FOC_OBSERVER_ORTEGA_LAMBDA_COMP`
@@ -218,6 +218,7 @@ My other values for reference, mostly untouched:
 # MTPA
 
 > Saliency $= (L_q - L_d) / L$
+>
 > $I_d = [\lambda - \sqrt{\lambda^2 + 8\,\Delta L^2 I_s^2}] / (4\,\Delta L)$
 
 Saliency tells you reluctance torque is possible however it doesn't tell you whether it is big enough to actually use, this ratio shows it better:
@@ -311,7 +312,7 @@ It's also self-limiting, weakening lowers the voltage you need, which lowers dut
 - _FW Ramp Time_: controls how fast it comes on, 150-500ms are sensible depending on how fast u need it to engage.
 - _FW Backoff_: **leave this non-zero/stock.** See section below.
 
-To find your _FW Current Max_, raise it 10A at a time and do a top speed run each time, same charge, same road, same tuck. Keep going while top speed goes up, the moment it stops going up or drops, go back one step. That's your number, past it you're giving away more torque than the extra voltage buys you.
+To find your _FW Current Max_, raise it 10A at a time and do a top speed run each time, when no more noticeable gains are available, go and choose the value that fits your setup.
 
 ## Dangers of Field Weakening
 
