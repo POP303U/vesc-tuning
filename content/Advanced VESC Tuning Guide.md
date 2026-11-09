@@ -74,7 +74,7 @@ Before running any Motor Detection be sure to go to *Motor Cfg -> FOC -> Sensorl
 
 Do this if u feel confident, i wouldn't mess with it if you don't have the experience:
 
-* Set the *Max Power Loss* to the max acceptable peak loss during acceleration, tweak this value based on your setup, lower might be better on motors with less mass while selecting your motor type by clicking on *Override (Advanced)* and then do that.
+* Set the *Max Power Loss* to the max acceptable peak heat loss ever (excluding harmonics), tweak this value based on your setup, lower might be better on motors with less mass while selecting your motor type by clicking on *Override (Advanced)* and then do that.
 
 VESC sets the detection current based on: $I = \sqrt{P/(1.5R)}$, so 800 W on 50.3 mΩ gives 103 A, if you use values like 800W on 2kW motors your motor will saturate and you get high-current values instead of normal ones, which can be desired on setups that run into saturation a lot.
 
@@ -105,7 +105,7 @@ Set *Hall Sensor Interpolation ERPM* to 250 from 500 (setting it too low can cau
 
 ## Observer Types
 
-Go to *Motor Cfg -> FOC -> Advanced*, and test the different observers during the transition period. Mxlemming works much nicer with motors that have rapid saturation and high pole counts, mxv is the heavier version of mxlemming (due to more advanced processing of flu).
+Go to *Motor Cfg -> FOC -> Advanced*, and test the different observers during the transition period. Mxlemming works much nicer with motors that have rapid saturation and high pole counts, mxv is the heavier version of mxlemming (due to more advanced processing of flux).
 
 + `FOC_OBSERVER_ORTEGA_ORIGINAL`
 	+ Original VESC Observer, uses the observer gain and relies heavily on your motor parameters being right, shouldn't be used unless you like hand tuning motor parameters.
@@ -325,7 +325,7 @@ Also remember $I_d$ is real phase current on top of your torque current, 110A of
 
 Field Weakening doesn't directly cause heat, since $I_d$ takes a share of your existing current instead of adding to it:
 
-- $I_s^2 = I_d^2 + I_q^2$
+- $I_s = \sqrt{I_d^2 + I_q^2}$
 
 The heat comes from what it unlocks, more speed means more drag, aerodynamic drag scales with $v^2$, drag power by $v^3$ so you need more $I_q$  at more $-I_d$ to hold it. If it doesn't make you faster, you get torque loss + more heat.
 
